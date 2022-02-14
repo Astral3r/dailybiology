@@ -1,0 +1,509 @@
+from cgitb import text
+import logging
+
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+import pandas as pd
+
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
+from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters
+
+import telegram
+import telegram.ext
+
+
+scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
+creds = ServiceAccountCredentials.from_json_keyfile_name(r'PATH', scope)
+client = gspread.authorize(creds)
+sheet = client.open('DailyBioBot').sheet1
+
+# Enable logging
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
+)
+
+logger = logging.getLogger(__name__)
+##########
+button_lang_eng = 'English \U0001F1EC\U0001F1E7'
+button_lang_ukr = 'Українська \U0001F1FA\U0001F1E6'
+button_lang_rus = 'Русский \U0001F1F7\U0001F1FA'
+def start(update: Update, context: CallbackContext) -> None:
+    keyboard = [[ KeyboardButton(text = button_lang_eng), KeyboardButton(text = button_lang_ukr), KeyboardButton(text = button_lang_rus)]]
+    text = " \U0001F1EC\U0001F1E7 Welcome to the Daily Biology Bot! For any help type /help. To continue, select your language. \r\n \U0001F1FA\U0001F1E6 Вітаємо у вас у боті Daily Biology! Уведіть /help, якщо вам потрібна якась допомога. Щоб продовжити, оберіть вашу мову. \r\n \U0001F1F7\U0001F1FA Приветсвуем вас в боте Daily Biology! Если вам необходима какая-либо помощь, введите /help. Чтобы продолжить, выбреите ваш язык."
+    reply_markup = telegram.ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+    update.message.reply_text(text, reply_markup=reply_markup)
+####
+
+######
+button_engl_beg = 'Beginner'
+button_engl_adv = 'Advanced'
+button_engl_pro = 'Pro'
+def button_lang_eng_handler(update: Update, context: CallbackContext):
+    reply_markup = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=button_engl_beg), KeyboardButton(text=button_engl_adv), KeyboardButton(text=button_engl_pro)
+            ]
+        ], one_time_keyboard=True, resize_keyboard=True
+    )
+    text = 'Now select your level of knowledge'
+    update.message.reply_text(text, reply_markup=reply_markup)
+
+###############
+button_engl_beg_1 = 'Once per day'
+button_engl_beg_2 = 'Twice per day'
+button_engl_beg_3 = 'Trice per day'
+def button_engl_beg_handler(update: Update, context: CallbackContext):
+    reply_markup = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=button_engl_beg_1), KeyboardButton(button_engl_beg_2), KeyboardButton(button_engl_beg_3)
+            ]
+        ], one_time_keyboard=True, resize_keyboard=True
+    )
+    text = 'How often would you like to recieve new articels?'
+    update.message.reply_text(text, reply_markup=reply_markup)
+
+def button_engl_beg_1_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=4,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('D2', '=ИНДЕКС(D3:D8;СЛУЧМЕЖДУ(1;6))')
+    context.job_queue.run_repeating(send_article_english_beg, 86400, context=update.message.chat_id)
+
+def button_engl_beg_2_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=4,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('D2', '=ИНДЕКС(D3:D8;СЛУЧМЕЖДУ(1;6))')
+    context.job_queue.run_repeating(send_article_english_beg, 43200, context=update.message.chat_id)
+
+def button_engl_beg_3_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=4,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('D2', '=ИНДЕКС(D3:D8;СЛУЧМЕЖДУ(1;6))')
+    context.job_queue.run_repeating(send_article_english_beg, 28800, context=update.message.chat_id)
+
+def send_article_english_beg(context: CallbackContext):
+    text=sheet.cell(col=4,row=2).value
+    sheet.update_acell('D2', '=ИНДЕКС(D3:D8;СЛУЧМЕЖДУ(1;6))')
+    context.bot.send_message(context.job.context, text)
+
+
+button_engl_adv_1 = 'One time per day'
+button_engl_adv_2 = 'Two times per day'
+button_engl_adv_3 = 'Three times per day'
+def button_engl_adv_handler(update: Update, context: CallbackContext):
+    reply_markup = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=button_engl_adv_1), KeyboardButton(button_engl_adv_2), KeyboardButton(button_engl_adv_3)
+            ]
+        ], one_time_keyboard=True, resize_keyboard=True
+    )
+    text = 'How often would you like to recieve new articels?'
+    update.message.reply_text(text, reply_markup=reply_markup)
+
+def button_engl_adv_1_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=5,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('E2', '=ИНДЕКС(E3:E7;СЛУЧМЕЖДУ(1;5))')
+    context.job_queue.run_repeating(send_article_english_adv, 86400, context=update.message.chat_id)
+
+def button_engl_adv_2_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=5,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('E2', '=ИНДЕКС(E3:E7;СЛУЧМЕЖДУ(1;5))')
+    context.job_queue.run_repeating(send_article_english_adv, 43200, context=update.message.chat_id)
+
+def button_engl_adv_3_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=5,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('E2', '=ИНДЕКС(E3:E7;СЛУЧМЕЖДУ(1;5))')
+    context.job_queue.run_repeating(send_article_english_adv, 28800, context=update.message.chat_id)
+
+def send_article_english_adv(context: CallbackContext):
+    text=sheet.cell(col=5,row=2).value
+    sheet.update_acell('E2', '=ИНДЕКС(E3:E7;СЛУЧМЕЖДУ(1;5))')
+    context.bot.send_message(context.job.context, text)
+
+
+button_engl_pro_1 = 'Once per day.'
+button_engl_pro_2 = 'Twice per day.'
+button_engl_pro_3 = 'Trice per day.'
+def button_engl_pro_handler(update: Update, context: CallbackContext):
+    reply_markup = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=button_engl_pro_1), KeyboardButton(button_engl_pro_2), KeyboardButton(button_engl_pro_3)
+            ]
+        ], one_time_keyboard=True, resize_keyboard=True
+    )
+    text = 'How often would you like to recieve new articels?'
+    update.message.reply_text(text, reply_markup=reply_markup)
+
+def button_engl_pro_1_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=6,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('F2', '=ИНДЕКС(F3:F8;СЛУЧМЕЖДУ(1;5))')
+    context.job_queue.run_repeating(send_article_english_pro, 86400, context=update.message.chat_id)
+
+def button_engl_pro_2_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=6,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('F2', '=ИНДЕКС(F3:F8;СЛУЧМЕЖДУ(1;5))')
+    context.job_queue.run_repeating(send_article_english_pro, 43200, context=update.message.chat_id)
+
+def button_engl_pro_3_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=6,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('F2', '=ИНДЕКС(F3:F8;СЛУЧМЕЖДУ(1;5))')
+    context.job_queue.run_repeating(send_article_english_pro, 28800, context=update.message.chat_id)
+
+def send_article_english_pro(context: CallbackContext):
+    text=sheet.cell(col=5,row=2).value
+    sheet.update_acell('F2', '=ИНДЕКС(F3:F8;СЛУЧМЕЖДУ(1;5))')
+    context.bot.send_message(context.job.context, text)
+
+
+
+button_ukr_beg = 'Базовий'
+button_ukr_adv = 'Поглибленний'
+button_ukr_pro = 'Професійний'
+def button_lang_ukr_handler(update: Update, context: CallbackContext):
+    reply_markup = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=button_ukr_beg), KeyboardButton(text=button_ukr_adv), KeyboardButton(text=button_ukr_pro)
+            ]
+        ], one_time_keyboard=True, resize_keyboard=True
+    )
+    text = 'Тепер оберіть свій рівень знань'
+    update.message.reply_text(text, reply_markup=reply_markup)
+
+button_ukr_beg_1 = 'Раз на день'
+button_ukr_beg_2 = 'Двічі на день'
+button_ukr_beg_3 = 'Тричі на день'
+def button_ukr_beg_handler(update: Update, context: CallbackContext):
+    reply_markup = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=button_ukr_beg_1), KeyboardButton(button_ukr_beg_2), KeyboardButton(button_ukr_beg_3)
+            ]
+        ], one_time_keyboard=True, resize_keyboard=True
+    )
+    text = 'Як часто ви бажаєте отримувати нові статті?'
+    update.message.reply_text(text, reply_markup=reply_markup)
+
+
+def button_ukr_beg_1_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=8,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('H2', '=ИНДЕКС(H3:H8;СЛУЧМЕЖДУ(1;6))')
+    context.job_queue.run_repeating(send_article_ukrainian_beg, 86400, context=update.message.chat_id)
+
+def button_ukr_beg_2_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=8,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('H2', '=ИНДЕКС(H3:H8;СЛУЧМЕЖДУ(1;6))')
+    context.job_queue.run_repeating(send_article_ukrainian_beg, 43200, context=update.message.chat_id)
+
+def button_ukr_beg_3_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=8,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('H2', '=ИНДЕКС(H3:H8;СЛУЧМЕЖДУ(1;6))')
+    context.job_queue.run_repeating(send_article_ukrainian_beg, 28800, context=update.message.chat_id)
+
+def send_article_ukrainian_beg(context: CallbackContext):
+    text=sheet.cell(col=8,row=2).value
+    sheet.update_acell('H2', '=ИНДЕКС(H3:H8;СЛУЧМЕЖДУ(1;6))')
+    context.bot.send_message(context.job.context, text)
+
+
+button_ukr_adv_1 = 'Одие раз на день'
+button_ukr_adv_2 = 'Двічi на день'
+button_ukr_adv_3 = 'Тричi на день'
+def button_ukr_adv_handler(update: Update, context: CallbackContext):
+    reply_markup = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=button_ukr_adv_1), KeyboardButton(button_ukr_adv_2), KeyboardButton(button_ukr_adv_3)
+            ]
+        ], one_time_keyboard=True, resize_keyboard=True
+    )
+    text = 'Як часто ви бажаєте отримувати нові статті?'
+    update.message.reply_text(text, reply_markup=reply_markup)
+
+def button_ukr_adv_1_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=9,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('I2', '=ИНДЕКС(I3:I8;СЛУЧМЕЖДУ(1;6))')
+    context.job_queue.run_repeating(send_article_ukrainian_adv, 86400, context=update.message.chat_id)
+
+def button_ukr_adv_2_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=9,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('I2', '=ИНДЕКС(I3:I8;СЛУЧМЕЖДУ(1;6))')
+    context.job_queue.run_repeating(send_article_ukrainian_adv, 43200, context=update.message.chat_id)
+
+def button_ukr_adv_3_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=9,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('I2', '=ИНДЕКС(I3:I8;СЛУЧМЕЖДУ(1;6))')
+    context.job_queue.run_repeating(send_article_ukrainian_adv, 28800, context=update.message.chat_id)
+
+def send_article_ukrainian_adv(context: CallbackContext):
+    text=sheet.cell(col=9,row=2).value
+    sheet.update_acell('I2', '=ИНДЕКС(I3:I8;СЛУЧМЕЖДУ(1;6))')
+    context.bot.send_message(context.job.context, text)
+
+
+button_ukr_pro_1 = 'Раз у день'
+button_ukr_pro_2 = 'Двiчi на день'
+button_ukr_pro_3 = 'Тричі у день'
+def button_ukr_pro_handler(update: Update, context: CallbackContext):
+    reply_markup = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=button_ukr_pro_1), KeyboardButton(button_ukr_pro_2), KeyboardButton(button_ukr_pro_3)
+            ]
+        ], one_time_keyboard=True, resize_keyboard=True
+    )
+    text = 'Як часто ви бажаєте отримувати нові статті?'
+    update.message.reply_text(text, reply_markup=reply_markup)
+
+def button_ukr_pro_1_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=10,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('J2', '=ИНДЕКС(J3:J8;СЛУЧМЕЖДУ(1;6))')
+    context.job_queue.run_repeating(send_article_ukrainian_pro, 86400, context=update.message.chat_id)
+
+def button_ukr_pro_2_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=10,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('J2', '=ИНДЕКС(J3:J8;СЛУЧМЕЖДУ(1;6))')
+    context.job_queue.run_repeating(send_article_ukrainian_pro, 43200, context=update.message.chat_id)
+
+def button_ukr_pro_3_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=10,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('J2', '=ИНДЕКС(J3:J8;СЛУЧМЕЖДУ(1;6))')
+    context.job_queue.run_repeating(send_article_ukrainian_pro, 28800, context=update.message.chat_id)
+
+def send_article_ukrainian_pro(context: CallbackContext):
+    text=sheet.cell(col=10,row=2).value
+    sheet.update_acell('J2', '=ИНДЕКС(J3:J8;СЛУЧМЕЖДУ(1;6))')
+    context.bot.send_message(context.job.context, text)
+
+
+
+button_rus_beg = 'Базовый'
+button_rus_adv = 'Углубленный'
+button_rus_pro = 'Профессиональный'
+def button_lang_rus_handler(update: Update, context: CallbackContext):
+    reply_markup = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=button_rus_beg), KeyboardButton(text=button_rus_adv), KeyboardButton(text=button_rus_pro)
+            ]
+        ], one_time_keyboard=True, resize_keyboard=True
+    )
+    text = 'Теперь выберите свой уровень знаний'
+    update.message.reply_text(text, reply_markup=reply_markup)
+
+
+button_rus_beg_1 = 'Раз в день'
+button_rus_beg_2 = 'Дважды в день'
+button_rus_beg_3 = 'Трижды в день'
+def button_rus_beg_handler(update: Update, context: CallbackContext):
+    reply_markup = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=button_rus_beg_1), KeyboardButton(button_rus_beg_2), KeyboardButton(button_rus_beg_3)
+            ]
+        ], one_time_keyboard=True, resize_keyboard=True
+    )
+    text = 'Насколько часто вы хотите получать новые статьи?'
+    update.message.reply_text(text, reply_markup=reply_markup)
+
+def button_rus_beg_1_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=12,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('L2', '=ИНДЕКС(L3:L8;СЛУЧМЕЖДУ(1;6))')
+    context.job_queue.run_repeating(send_article_russian_beg, 86400, context=update.message.chat_id)
+
+def button_rus_beg_2_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=12,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('L2', '=ИНДЕКС(L3:L8;СЛУЧМЕЖДУ(1;6))')
+    context.job_queue.run_repeating(send_article_russian_beg, 43200, context=update.message.chat_id)
+
+def button_rus_beg_3_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=12,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('L2', '=ИНДЕКС(L3:L8;СЛУЧМЕЖДУ(1;6))')
+    context.job_queue.run_repeating(send_article_russian_beg, 28800, context=update.message.chat_id)
+
+def send_article_russian_beg(context: CallbackContext):
+    text=sheet.cell(col=12,row=2).value
+    sheet.update_acell('L2', '=ИНДЕКС(L3:L8;СЛУЧМЕЖДУ(1;6))')
+    context.bot.send_message(context.job.context, text)
+
+
+button_rus_adv_1 = 'Один раз в день'
+button_rus_adv_2 = 'Два раза в день'
+button_rus_adv_3 = 'Три раза в день'
+def button_rus_adv_handler(update: Update, context: CallbackContext):
+    reply_markup = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=button_rus_adv_1), KeyboardButton(button_rus_adv_2), KeyboardButton(button_rus_adv_3)
+            ]
+        ], one_time_keyboard=True, resize_keyboard=True
+    )
+    text = 'Насколько часто вы хотите получать новые статьи?'
+    update.message.reply_text(text, reply_markup=reply_markup)
+
+def button_rus_adv_1_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=13,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('M2', '=ИНДЕКС(M3:M8;СЛУЧМЕЖДУ(1;6))')
+    context.job_queue.run_repeating(send_article_russian_adv, 86400, context=update.message.chat_id)
+
+def button_rus_adv_2_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=13,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('M2', '=ИНДЕКС(M3:M8;СЛУЧМЕЖДУ(1;6))')
+    context.job_queue.run_repeating(send_article_russian_adv, 43200, context=update.message.chat_id)
+
+def button_rus_adv_3_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=13,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('M2', '=ИНДЕКС(M3:M8;СЛУЧМЕЖДУ(1;6))')
+    context.job_queue.run_repeating(send_article_russian_adv, 28800, context=update.message.chat_id)
+
+def send_article_russian_adv(context: CallbackContext):
+    text=sheet.cell(col=13,row=2).value
+    sheet.update_acell('L2', '=ИНДЕКС(M3:M8;СЛУЧМЕЖДУ(1;6))')
+    context.bot.send_message(context.job.context, text)
+
+
+button_rus_pro_1 = 'Раз в день.'
+button_rus_pro_2 = 'Дважды в день.'
+button_rus_pro_3 = 'Трижды в день.'
+def button_rus_pro_handler(update: Update, context: CallbackContext):
+    reply_markup = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=button_rus_pro_1), KeyboardButton(button_rus_pro_2), KeyboardButton(button_rus_pro_3)
+            ]
+        ], one_time_keyboard=True, resize_keyboard=True
+    )
+    text = 'Насколько часто вы хотите получать новые статьи?'
+    update.message.reply_text(text, reply_markup=reply_markup)
+
+
+def button_rus_pro_1_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=14,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('N2', '=ИНДЕКС(N3:N8;СЛУЧМЕЖДУ(1;6))')
+    context.job_queue.run_repeating(send_article_russian_pro, 86400, context=update.message.chat_id)
+
+def button_rus_pro_2_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=14,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('N2', '=ИНДЕКС(N3:N8;СЛУЧМЕЖДУ(1;6))')
+    context.job_queue.run_repeating(send_article_russian_pro, 43200, context=update.message.chat_id)
+
+def button_rus_pro_3_handler(update: Update, context: CallbackContext):
+    text=sheet.cell(col=14,row=2).value
+    update.message.reply_text(text)
+    sheet.update_acell('N2', '=ИНДЕКС(N3:N8;СЛУЧМЕЖДУ(1;6))')
+    context.job_queue.run_repeating(send_article_russian_pro, 28800, context=update.message.chat_id)
+
+def send_article_russian_pro(context: CallbackContext):
+    text=sheet.cell(col=13,row=2).value
+    sheet.update_acell('N2', '=ИНДЕКС(N3:N8;СЛУЧМЕЖДУ(1;6))')
+    context.bot.send_message(context.job.context, text)
+
+def help(update: Update, context: CallbackContext) -> None:
+    text = ' \U0001F1EC\U0001F1E7 The bot will send you scientific/sci-pop articles on the selected languages. If you want to stop it, just simply block the bot. If you did not recieve an article after selected amount of time, please, try to restart the process with typing /start command. \r\n \U0001F1FA\U0001F1E6 Цей бот буде вам автоматично відслиати наукові/наук-поп статті обраною мовою. Якщо ви хочете зупините це, просто заблокуйте бота. Якщо ж бот перестав надсилати вам статті у зазначений час, будь ласка, перезапустітть процес, увевши команду /start. \r\n \U0001F1F7\U0001F1FA Этот бот будет отправлять вам научные/науч-поп статьи на выбранном языке. Если вы больше не хотите получать новые статьи, просто заблокируйте бота. Если бот перестал отправлять вам статьи в назначенное время, перезапустите процесс, введя комманду /start'
+    update.message.reply_text(text)
+
+def main() -> None:
+
+
+    updater = Updater("TOKEN")
+
+
+    dispatcher = updater.dispatcher
+
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CommandHandler("help", help))
+
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_lang_eng), callback=button_lang_eng_handler))
+
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_engl_beg), callback=button_engl_beg_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_engl_beg_1), callback=button_engl_beg_1_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_engl_beg_2), callback=button_engl_beg_2_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_engl_beg_3), callback=button_engl_beg_3_handler))
+
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_engl_adv), callback=button_engl_adv_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_engl_adv_1), callback=button_engl_adv_1_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_engl_adv_2), callback=button_engl_adv_2_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_engl_adv_3), callback=button_engl_adv_3_handler))
+
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_engl_pro), callback=button_engl_pro_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_engl_pro_1), callback=button_engl_pro_1_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_engl_pro_2), callback=button_engl_pro_2_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_engl_pro_3), callback=button_engl_pro_3_handler))
+
+
+
+
+
+
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_lang_ukr), callback=button_lang_ukr_handler))
+
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_ukr_beg), callback=button_ukr_beg_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_ukr_beg_1), callback=button_ukr_beg_1_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_ukr_beg_2), callback=button_ukr_beg_2_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_ukr_beg_3), callback=button_ukr_beg_3_handler))
+
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_ukr_adv), callback=button_ukr_adv_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_ukr_adv_1), callback=button_ukr_adv_1_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_ukr_adv_2), callback=button_ukr_adv_2_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_ukr_adv_3), callback=button_ukr_adv_3_handler))
+
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_ukr_pro), callback=button_ukr_pro_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_ukr_pro_1), callback=button_ukr_pro_1_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_ukr_pro_2), callback=button_ukr_pro_2_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_ukr_pro_3), callback=button_ukr_pro_3_handler))
+
+
+
+
+
+
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_lang_rus), callback=button_lang_rus_handler))
+
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_rus_beg), callback=button_rus_beg_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_rus_beg_1), callback=button_rus_beg_1_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_rus_beg_2), callback=button_rus_beg_2_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_rus_beg_3), callback=button_rus_beg_3_handler))
+
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_rus_adv), callback=button_rus_adv_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_rus_adv_1), callback=button_rus_adv_1_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_rus_adv_2), callback=button_rus_adv_2_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_rus_adv_3), callback=button_rus_adv_3_handler))
+
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_rus_pro), callback=button_rus_pro_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_rus_pro_1), callback=button_rus_pro_1_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_rus_pro_2), callback=button_rus_pro_2_handler))
+    dispatcher.add_handler(MessageHandler(filters=Filters.text(button_rus_pro_3), callback=button_rus_pro_3_handler))
+
+
+    # Start the Bot
+    updater.start_polling()
+
+    updater.idle()
+if __name__ == '__main__':
+    main()
